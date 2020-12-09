@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+
+       http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+       http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+
+       http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+
+    <import resource="classpath*:/application-optimus-datasource.xml"/>
+
+    <!-- User declarative transaction management -->
+    <tx:annotation-driven transaction-manager="transactionManager"  proxy-target-class="true"/>
+    <aop:aspectj-autoproxy proxy-target-class="true"/>
+
+    <bean class="org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor"/>
+    <!-- JPA Entity Manager Factory -->
+    <bean id="entityManagerFactory"
+          class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean"
+          p:packagesToScan="com.souche.event.sourcing" p:dataSource-ref="dataSource" p:persistenceXmlLocation="classpath*:persistence.xml"
+          p:jpaVendorAdapter-ref="hibernateVendor" p:jpaPropertyMap-ref="jpaPropertyMap"/>
+
+    <util:map id="jpaPropertyMap">
+        <entry key="hibernate.hbm2ddl.auto" value="update"/>
+        <!--<entry key="hibernate.dialect" value="org.hibernate.dialect.MySQLDialect"/>-->
+        <!-- To enable Hibernate's second level cache and query cache settings -->
+        <entry key="hibernate.max_fetch_depth" value="4"/>
+        <entry key="hibernate.cache.use_second_level_cache" value="false"/>
+        <entry key="hibernate.cache.use_query_cache" value="false"/>
+        <!--<entry key="hibernate.cache.region.factory_class" value="org.hibernate.cache.ehcache.EhCacheRegionFactory"/>-->
+    </util:map>
+
+    <bean id="hibernateVendor"
+          class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter"
+          p:database="MYSQL" p:showSql="true" p:generateDdl="true"
+          p:databasePlatform="com.souche.finance.common.db.dialect.NoFKMySqlInnoDBDialect"/>
+
+    <!-- Transaction Config -->
+    <bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager"
+          p:entityManagerFactory-ref="entityManagerFactory">
+        <property name="jpaDialect">
+            <bean class="org.springframework.orm.jpa.vendor.HibernateJpaDialect"/>
+        </property>
+    </bean>
+
+</beans>
